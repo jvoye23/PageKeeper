@@ -121,6 +121,9 @@ class BookRepositoryImpl(
             coverImagePath = book.coverImagePath,
             isFavorite = book.isFavorite,
             isFinished = book.isFinished,
+            readingItemIndex = book.readingPosition.firstVisibleItemIndex,
+            readingScrollOffset = book.readingPosition.firstVisibleItemScrollOffset,
+            readingSectionCount = book.readingPosition.loadedSectionCount,
         )
         localBookDataSource.update(updated)
     }
@@ -128,5 +131,23 @@ class BookRepositoryImpl(
     override suspend fun getBookFilePath(bookId: String): String? {
         val entity = localBookDataSource.getAll().find { it.id == bookId } ?: return null
         return fileStorage.getFullPath(entity.storedFileName)
+    }
+
+    override suspend fun getBookFileBytes(bookId: String): ByteArray? {
+        val path = getBookFilePath(bookId) ?: return null
+        return try {
+            fileStorage.readFile(path)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    override suspend fun getBookFileExtension(bookId: String): String? {
+        val entity = localBookDataSource.getAll().find { it.id == bookId } ?: return null
+        return entity.storedFileName.substringAfterLast('.', "").lowercase()
+    }
+
+    override suspend fun getBookById(bookId: String): Book? {
+        return localBookDataSource.getAll().find { it.id == bookId }?.toBook()
     }
 }

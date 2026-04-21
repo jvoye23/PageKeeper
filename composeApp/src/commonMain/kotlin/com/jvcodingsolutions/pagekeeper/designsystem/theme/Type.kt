@@ -98,6 +98,15 @@ fun PageKeeperTypography(): Typography {
             fontSize = 14.sp,
             lineHeight = 16.sp,
             letterSpacing = 0.sp,
-        ),
+        )
     )
 }
+
+val Typography.chapterTitle: TextStyle
+    @Composable
+    get() = TextStyle(
+        fontFamily = LoraFontFamily(),
+        fontWeight = FontWeight.Bold,
+        fontSize = 25.sp,
+        lineHeight = 30.sp
+    )

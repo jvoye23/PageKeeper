@@ -6,4 +6,7 @@ interface BookRepository {
     suspend fun deleteBook(bookId: String)
     suspend fun updateBook(book: Book)
     suspend fun getBookFilePath(bookId: String): String?
+    suspend fun getBookFileBytes(bookId: String): ByteArray?
+    suspend fun getBookFileExtension(bookId: String): String?
+    suspend fun getBookById(bookId: String): Book?
 }
