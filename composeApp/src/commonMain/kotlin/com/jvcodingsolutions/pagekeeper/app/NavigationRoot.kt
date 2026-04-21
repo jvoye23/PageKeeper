@@ -43,6 +43,7 @@ import androidx.compose.material3.rememberWideNavigationRailState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,6 +57,7 @@ import com.jvcodingsolutions.pagekeeper.app.navigation.FavoritesRoute
 import com.jvcodingsolutions.pagekeeper.app.navigation.FinishedRoute
 import com.jvcodingsolutions.pagekeeper.app.navigation.LibraryRoute
 import com.jvcodingsolutions.pagekeeper.app.navigation.Navigator
+import com.jvcodingsolutions.pagekeeper.app.navigation.ReaderRoute
 import com.jvcodingsolutions.pagekeeper.app.navigation.SplashRoute
 import com.jvcodingsolutions.pagekeeper.getPlatform
 import com.jvcodingsolutions.pagekeeper.designsystem.theme.AppIcons
@@ -67,6 +69,7 @@ import com.jvcodingsolutions.pagekeeper.designsystem.theme.TabletBlockBg
 import com.jvcodingsolutions.pagekeeper.feature.library.presentation.LibraryAction
 import com.jvcodingsolutions.pagekeeper.feature.library.presentation.LibraryScreenRoot
 import com.jvcodingsolutions.pagekeeper.feature.library.presentation.LibraryViewModel
+import com.jvcodingsolutions.pagekeeper.feature.reader.presentation.ReaderScreenRoot
 import com.jvcodingsolutions.pagekeeper.feature.splash.SplashScreen
 import kotlinx.coroutines.launch
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
@@ -87,7 +90,7 @@ fun NavigationRoot() {
             color = MaterialTheme.colorScheme.background,
         ) {
         val startRoute = if (getPlatform().showComposeSplash) SplashRoute else LibraryRoute
-        val navigator = remember { Navigator(startRoute) }
+        val navigator = rememberSaveable(saver = Navigator.Saver) { Navigator(startRoute) }
         val windowSizeClass = calculateWindowSizeClass()
         val isExpandedScreen = windowSizeClass.widthSizeClass >= WindowWidthSizeClass.Expanded
         val libraryViewModel: LibraryViewModel = koinViewModel()
@@ -162,6 +165,13 @@ fun NavigationRoot() {
                         )
                     }
                 }
+
+                entry<ReaderRoute> { route ->
+                    ReaderScreenRoot(
+                        bookId = route.bookId,
+                        onBackClick = { navigator.goBack() },
+                    )
+                }
             },
         )
         }
@@ -204,6 +214,7 @@ private fun CompactLibraryLayout(
             onMenuClick = {
                 scope.launch { drawerState.open() }
             },
+            onBookClick = { bookId -> navigator.goTo(ReaderRoute(bookId)) },
             viewModel = viewModel,
         )
     }
@@ -244,6 +255,7 @@ private fun ExpandedLibraryLayout(
         ) {
             LibraryScreenRoot(
                 onMenuClick = { },
+                onBookClick = { bookId -> navigator.goTo(ReaderRoute(bookId)) },
                 viewModel = viewModel,
                 containerColor = TabletBlockBg,
                 isTablet = true,

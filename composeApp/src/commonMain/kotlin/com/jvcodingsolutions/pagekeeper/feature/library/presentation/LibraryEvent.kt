@@ -9,4 +9,5 @@ sealed interface LibraryEvent {
     data object OpenFilePicker : LibraryEvent
     data class ShareBook(val book: ShareableBook) : LibraryEvent
     data class ShareBooks(val books: List<ShareableBook>) : LibraryEvent
+    data class NavigateToReader(val bookId: String) : LibraryEvent
 }

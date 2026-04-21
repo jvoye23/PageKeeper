@@ -14,3 +14,6 @@ data object FavoritesRoute : NavKey
 
 @Serializable
 data object FinishedRoute : NavKey
+
+@Serializable
+data class ReaderRoute(val bookId: String) : NavKey

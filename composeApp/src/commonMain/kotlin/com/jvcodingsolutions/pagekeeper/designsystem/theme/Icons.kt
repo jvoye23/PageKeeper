@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import org.jetbrains.compose.resources.vectorResource
 import pagekeeper.composeapp.generated.resources.Res
 import pagekeeper.composeapp.generated.resources.close_menu
+import pagekeeper.composeapp.generated.resources.font_size
 import pagekeeper.composeapp.generated.resources.ic_arrow_back
 import pagekeeper.composeapp.generated.resources.ic_close
 import pagekeeper.composeapp.generated.resources.ic_delete
@@ -19,6 +20,10 @@ import pagekeeper.composeapp.generated.resources.ic_search
 import pagekeeper.composeapp.generated.resources.ic_share
 import pagekeeper.composeapp.generated.resources.ic_star_filled
 import pagekeeper.composeapp.generated.resources.ic_star_outline
+import pagekeeper.composeapp.generated.resources.landscape
+import pagekeeper.composeapp.generated.resources.minus
+import pagekeeper.composeapp.generated.resources.plus
+import pagekeeper.composeapp.generated.resources.portrait
 
 object AppIcons {
     val ArrowBack: ImageVector
@@ -65,4 +70,19 @@ object AppIcons {
 
     val CloseMenu: ImageVector
         @Composable get() = vectorResource(Res.drawable.close_menu)
+
+    val Portrait: ImageVector
+        @Composable get() = vectorResource(Res.drawable.portrait)
+
+    val Landscape: ImageVector
+        @Composable get() = vectorResource(Res.drawable.landscape)
+
+    val FontSizeIcon: ImageVector
+        @Composable get() = vectorResource(Res.drawable.font_size)
+
+    val PlusIcon: ImageVector
+        @Composable get() = vectorResource(Res.drawable.plus)
+
+    val MinusIcon: ImageVector
+        @Composable get() = vectorResource(Res.drawable.minus)
 }

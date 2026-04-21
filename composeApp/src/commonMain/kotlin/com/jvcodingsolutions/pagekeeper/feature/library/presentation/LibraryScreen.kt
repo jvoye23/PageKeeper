@@ -58,6 +58,7 @@ import androidx.compose.ui.tooling.preview.Devices.PIXEL_TABLET
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jvcodingsolutions.pagekeeper.core.presentation.ObserveAsEvents
 import com.jvcodingsolutions.pagekeeper.core.presentation.UiText
@@ -67,6 +68,8 @@ import com.jvcodingsolutions.pagekeeper.core.presentation.rememberFilePickerLaun
 import com.jvcodingsolutions.pagekeeper.designsystem.components.BookCard
 import com.jvcodingsolutions.pagekeeper.designsystem.components.SearchResultBookCard
 import com.jvcodingsolutions.pagekeeper.designsystem.theme.AppIcons
+import com.jvcodingsolutions.pagekeeper.designsystem.theme.LoaderMain
+import com.jvcodingsolutions.pagekeeper.designsystem.theme.LoaderSecondary
 import com.jvcodingsolutions.pagekeeper.designsystem.theme.Icons as IconColor
 import com.jvcodingsolutions.pagekeeper.designsystem.theme.BgMain
 import com.jvcodingsolutions.pagekeeper.designsystem.theme.Divider as DividerColor
@@ -84,11 +87,17 @@ import pagekeeper.composeapp.generated.resources.book_open_logo
 @Composable
 fun LibraryScreenRoot(
     onMenuClick: () -> Unit,
+    onBookClick: (String) -> Unit = {},
     viewModel: LibraryViewModel = koinViewModel(),
     containerColor: Color = MaterialTheme.colorScheme.background,
     isTablet: Boolean = false,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    LifecycleResumeEffect(Unit) {
+        viewModel.refreshBooks()
+        onPauseOrDispose { }
+    }
 
     val filePickerLauncher = rememberFilePickerLauncher { fileName, fileBytes ->
         if (fileName != null && fileBytes != null) {
@@ -108,6 +117,9 @@ fun LibraryScreenRoot(
             }
             is LibraryEvent.ShareBooks -> {
                 bookSharer.share(event.books.map { ShareFile(it.filePath, it.title) })
+            }
+            is LibraryEvent.NavigateToReader -> {
+                onBookClick(event.bookId)
             }
         }
     }
@@ -401,6 +413,7 @@ fun LibraryScreen(
                         .fillMaxSize()
                         .padding(paddingValues)
                         .padding(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     items(
                         items = state.displayedBooks,
@@ -428,11 +441,14 @@ fun LibraryScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.5f)),
+                    .background(Color.Black.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator(
-                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(48.dp),
+                    color = LoaderMain,
+                    trackColor = LoaderSecondary,
+                    strokeWidth = 5.dp,
                 )
             }
         }

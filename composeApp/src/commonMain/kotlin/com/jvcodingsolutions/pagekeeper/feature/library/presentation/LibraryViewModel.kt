@@ -25,10 +25,10 @@ class LibraryViewModel(
     val events = _events.receiveAsFlow()
 
     init {
-        loadBooks()
+        refreshBooks()
     }
 
-    private fun loadBooks() {
+    fun refreshBooks() {
         viewModelScope.launch {
             val books = repository.getBooks()
             _state.update { it.copy(books = books) }
@@ -130,9 +130,14 @@ class LibraryViewModel(
     }
 
     private fun onBookClick(bookId: String) {
-        _state.update { currentState ->
-            if (!currentState.isSelectionMode) return@update currentState
+        if (!_state.value.isSelectionMode) {
+            viewModelScope.launch {
+                _events.send(LibraryEvent.NavigateToReader(bookId))
+            }
+            return
+        }
 
+        _state.update { currentState ->
             val updatedSelection = if (bookId in currentState.selectedBookIds) {
                 currentState.selectedBookIds - bookId
             } else {
