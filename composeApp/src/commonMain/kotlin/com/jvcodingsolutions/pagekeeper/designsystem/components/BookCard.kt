@@ -23,6 +23,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -32,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.layout.ContentScale
 import coil3.compose.AsyncImage
 import androidx.compose.ui.text.style.TextOverflow
@@ -79,6 +81,8 @@ fun BookCard(
         null
     }
 
+    val progressFraction = if (book.isFinished) 1f else book.readingPosition.progressFraction
+
     Surface(color = Color.Transparent) {
         Card(
             modifier = modifier
@@ -94,65 +98,75 @@ fun BookCard(
             ),
             border = borderStroke,
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                if (isSelectionMode) {
-                    Checkbox(
-                        checked = isSelected,
-                        onCheckedChange = { onClick() },
-                        colors = CheckboxDefaults.colors(
-                            checkedColor = Primary,
-                            uncheckedColor = Icons,
-                            checkmarkColor = BgMain,
-                        ),
-                    )
-                }
-
-                BookCoverImage(
-                    coverImagePath = book.coverImagePath,
-                )
-
-                Column(
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
-                        .padding(vertical = 8.dp),
-                    verticalArrangement = Arrangement.SpaceBetween,
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        Text(
-                            text = book.title,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
+                    if (isSelectionMode) {
+                        Checkbox(
+                            checked = isSelected,
+                            onCheckedChange = { onClick() },
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = Primary,
+                                uncheckedColor = Icons,
+                                checkmarkColor = BgMain,
+                            ),
                         )
-                        Text(
-                            text = book.author,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-
                     }
-                    Spacer(modifier = Modifier.height(48.dp))
 
-
-
-                    ActionIconsRow(
-                        isFavorite = book.isFavorite,
-                        isFinished = book.isFinished,
-                        onFavoriteClick = onFavoriteClick,
-                        onFinishedClick = onFinishedClick,
-                        onShareClick = onShareClick,
-                        onDeleteClick = onDeleteClick,
+                    BookCoverImage(
+                        coverImagePath = book.coverImagePath,
                     )
+
+                    Column(
+                        modifier = Modifier
+                            .padding(vertical = 8.dp),
+                        verticalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Text(
+                                text = book.title,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Text(
+                                text = book.author,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+
+                        }
+                        Spacer(modifier = Modifier.height(48.dp))
+
+                        LinearProgressIndicator(
+                            progress = { progressFraction },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(4.dp),
+                            color = Primary,
+                            trackColor = BgActive,
+                            gapSize = 6.dp,
+                            strokeCap = StrokeCap.Round
+                        )
+                        ActionIconsRow(
+                            isFavorite = book.isFavorite,
+                            isFinished = book.isFinished,
+                            onFavoriteClick = onFavoriteClick,
+                            onFinishedClick = onFinishedClick,
+                            onShareClick = onShareClick,
+                            onDeleteClick = onDeleteClick,
+                        )
+                    }
                 }
             }
         }

@@ -30,6 +30,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -71,12 +73,15 @@ import com.jvcodingsolutions.pagekeeper.designsystem.theme.AppIcons
 import com.jvcodingsolutions.pagekeeper.designsystem.theme.LoaderMain
 import com.jvcodingsolutions.pagekeeper.designsystem.theme.LoaderSecondary
 import com.jvcodingsolutions.pagekeeper.designsystem.theme.Icons as IconColor
+import com.jvcodingsolutions.pagekeeper.designsystem.components.LibraryContinueCard
+import com.jvcodingsolutions.pagekeeper.designsystem.theme.BgCard
 import com.jvcodingsolutions.pagekeeper.designsystem.theme.BgMain
 import com.jvcodingsolutions.pagekeeper.designsystem.theme.Divider as DividerColor
 import com.jvcodingsolutions.pagekeeper.designsystem.theme.OnPrimary
 import com.jvcodingsolutions.pagekeeper.designsystem.theme.StateAlert
 import com.jvcodingsolutions.pagekeeper.designsystem.theme.TabletBlockBg
 import com.jvcodingsolutions.pagekeeper.designsystem.theme.PageKeeperTheme
+import com.jvcodingsolutions.pagekeeper.designsystem.theme.Primary
 import com.jvcodingsolutions.pagekeeper.designsystem.theme.TextPrimary
 import com.jvcodingsolutions.pagekeeper.designsystem.theme.TextSecondary
 import org.jetbrains.compose.resources.painterResource
@@ -297,6 +302,27 @@ fun LibraryScreen(
                     )
                 }
             },
+            floatingActionButton = {
+                val showFab = !isTablet &&
+                    state.resumeBook != null &&
+                    !state.isSelectionMode &&
+                    !state.isSearchActive
+                if (showFab) {
+                    FloatingActionButton(
+                        onClick = { onAction(LibraryAction.OnResumeReadingClick) },
+                        containerColor = Primary,
+                        contentColor = IconColor,
+                        shape = RoundedCornerShape(16.dp),
+                    ) {
+                        Icon(
+                            imageVector = AppIcons.Read,
+                            contentDescription = "Continue reading",
+                            tint = MaterialTheme.colorScheme.background,
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
+                }
+            },
             containerColor = containerColor,
         ) { paddingValues ->
             if (state.hasNoSearchResults) {
@@ -371,8 +397,32 @@ fun LibraryScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
+                    val resume = state.resumeBook
+                    val showResumeCard = resume != null && !state.isSelectionMode
+                    val gridBooks = if (showResumeCard) {
+                        state.displayedBooks.filter { it.id != resume!!.id }
+                    } else {
+                        state.displayedBooks
+                    }
+                    if (showResumeCard) {
+                        item(
+                            key = "resume_card",
+                            span = { GridItemSpan(maxLineSpan) },
+                        ) {
+                            LibraryContinueCard(
+                                book = resume!!,
+                                onFavoriteClick = { onAction(LibraryAction.OnToggleFavorite(resume.id)) },
+                                onFinishedClick = { onAction(LibraryAction.OnToggleFinished(resume.id)) },
+                                onShareClick = { onAction(LibraryAction.OnShareBook(resume.id)) },
+                                onDeleteClick = { onAction(LibraryAction.OnDeleteBook(resume.id)) },
+                                onContinueClick = { onAction(LibraryAction.OnResumeReadingClick) },
+                                modifier = Modifier.fillMaxWidth(),
+                                isTablet = true,
+                            )
+                        }
+                    }
                     items(
-                        items = state.displayedBooks,
+                        items = gridBooks,
                         key = { it.id },
                     ) { book ->
                         BookCard(

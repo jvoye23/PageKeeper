@@ -25,6 +25,10 @@ data class LibraryState(
     val searchQuery: String = "",
     val deleteConfirmation: DeleteConfirmation? = null,
 ) {
+
+    val resumeBook: Book? get() = books
+        .filter { it.lastOpenedAt != null && !it.isFinished }
+        .maxByOrNull { it.lastOpenedAt ?: 0L }
     val displayedBooks: List<Book> get() {
         val filtered = when (activeFilter) {
             BookFilter.ALL -> books

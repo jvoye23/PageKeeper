@@ -9,4 +9,6 @@ interface BookRepository {
     suspend fun getBookFileBytes(bookId: String): ByteArray?
     suspend fun getBookFileExtension(bookId: String): String?
     suspend fun getBookById(bookId: String): Book?
+    suspend fun markBookOpened(bookId: String)
+    suspend fun getResumeBook(): Book?
 }
