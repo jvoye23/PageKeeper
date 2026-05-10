@@ -8,9 +8,11 @@ import com.jvcodingsolutions.pagekeeper.core.data.LocalBookDataSource
 import com.jvcodingsolutions.pagekeeper.core.data.PdfBookParser
 import com.jvcodingsolutions.pagekeeper.core.domain.BookRepository
 import com.jvcodingsolutions.pagekeeper.feature.library.presentation.LibraryViewModel
+import com.jvcodingsolutions.pagekeeper.feature.reader.chapters.ChaptersViewModel
 import com.jvcodingsolutions.pagekeeper.feature.reader.data.EpubContentParser
 import com.jvcodingsolutions.pagekeeper.feature.reader.data.Fb2ContentParser
 import com.jvcodingsolutions.pagekeeper.feature.reader.data.ReaderSettingsStorage
+import com.jvcodingsolutions.pagekeeper.feature.reader.presentation.ReaderSession
 import com.jvcodingsolutions.pagekeeper.feature.reader.presentation.ReaderViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +32,7 @@ val dataModule = module {
     singleOf(::Fb2ContentParser)
     singleOf(::EpubContentParser)
     singleOf(::ReaderSettingsStorage)
+    single { ReaderSession() }
 }
 
 val appModule = module {
@@ -39,5 +42,6 @@ val appModule = module {
     }
     viewModelOf(::MainViewModel)
     viewModelOf(::LibraryViewModel)
-    viewModel { params -> ReaderViewModel(params.get(), get(), get(), get(), get()) }
+    viewModel { params -> ReaderViewModel(params.get(), get(), get(), get(), get(), get()) }
+    viewModel { params -> ChaptersViewModel(params.get(), get(), get(), get(), get()) }
 }

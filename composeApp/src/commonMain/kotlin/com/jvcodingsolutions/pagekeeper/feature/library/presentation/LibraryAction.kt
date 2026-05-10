@@ -20,4 +20,5 @@ sealed interface LibraryAction {
     data object OnDismissErrorDialog : LibraryAction
     data object OnCloseSearch : LibraryAction
     data class OnSearchQueryChanged(val query: String) : LibraryAction
+    data object OnResumeReadingClick : LibraryAction
 }

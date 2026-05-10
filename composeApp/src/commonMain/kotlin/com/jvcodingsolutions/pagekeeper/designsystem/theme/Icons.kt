@@ -5,8 +5,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import org.jetbrains.compose.resources.vectorResource
 import pagekeeper.composeapp.generated.resources.Res
 import pagekeeper.composeapp.generated.resources.close_menu
+import pagekeeper.composeapp.generated.resources.continue_reading
 import pagekeeper.composeapp.generated.resources.font_size
 import pagekeeper.composeapp.generated.resources.ic_arrow_back
+import pagekeeper.composeapp.generated.resources.ic_chapters
 import pagekeeper.composeapp.generated.resources.ic_close
 import pagekeeper.composeapp.generated.resources.ic_delete
 import pagekeeper.composeapp.generated.resources.ic_favorites
@@ -24,6 +26,7 @@ import pagekeeper.composeapp.generated.resources.landscape
 import pagekeeper.composeapp.generated.resources.minus
 import pagekeeper.composeapp.generated.resources.plus
 import pagekeeper.composeapp.generated.resources.portrait
+import pagekeeper.composeapp.generated.resources.read
 
 object AppIcons {
     val ArrowBack: ImageVector
@@ -85,4 +88,13 @@ object AppIcons {
 
     val MinusIcon: ImageVector
         @Composable get() = vectorResource(Res.drawable.minus)
+
+    val Chapters: ImageVector
+        @Composable get() = vectorResource(Res.drawable.ic_chapters)
+
+    val Read: ImageVector
+        @Composable get() = vectorResource(Res.drawable.read)
+
+    val TabletContinueReading: ImageVector
+        @Composable get() = vectorResource(Res.drawable.continue_reading)
 }

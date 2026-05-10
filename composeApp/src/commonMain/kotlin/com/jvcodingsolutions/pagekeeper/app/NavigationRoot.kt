@@ -53,12 +53,14 @@ import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDe
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.jvcodingsolutions.pagekeeper.app.navigation.ChaptersRoute
 import com.jvcodingsolutions.pagekeeper.app.navigation.FavoritesRoute
 import com.jvcodingsolutions.pagekeeper.app.navigation.FinishedRoute
 import com.jvcodingsolutions.pagekeeper.app.navigation.LibraryRoute
 import com.jvcodingsolutions.pagekeeper.app.navigation.Navigator
 import com.jvcodingsolutions.pagekeeper.app.navigation.ReaderRoute
 import com.jvcodingsolutions.pagekeeper.app.navigation.SplashRoute
+import com.jvcodingsolutions.pagekeeper.feature.reader.chapters.ChaptersScreenRoot
 import com.jvcodingsolutions.pagekeeper.getPlatform
 import com.jvcodingsolutions.pagekeeper.designsystem.theme.AppIcons
 import com.jvcodingsolutions.pagekeeper.designsystem.theme.BgActive
@@ -168,6 +170,14 @@ fun NavigationRoot() {
 
                 entry<ReaderRoute> { route ->
                     ReaderScreenRoot(
+                        bookId = route.bookId,
+                        onBackClick = { navigator.goBack() },
+                        onChaptersClick = { bookId -> navigator.goTo(ChaptersRoute(bookId)) },
+                    )
+                }
+
+                entry<ChaptersRoute> { route ->
+                    ChaptersScreenRoot(
                         bookId = route.bookId,
                         onBackClick = { navigator.goBack() },
                     )

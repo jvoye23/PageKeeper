@@ -61,6 +61,14 @@ class LibraryViewModel(
             is LibraryAction.OnFavoriteSelected -> favoriteSelected()
             is LibraryAction.OnShareSelected -> shareSelected()
             is LibraryAction.OnDeleteSelected -> showDeleteSelectedConfirmation()
+            is LibraryAction.OnResumeReadingClick -> onResumeReadingClick()
+        }
+    }
+
+    private fun onResumeReadingClick() {
+        val resume = _state.value.resumeBook ?: return
+        viewModelScope.launch {
+            _events.send(LibraryEvent.NavigateToReader(resume.id))
         }
     }
 

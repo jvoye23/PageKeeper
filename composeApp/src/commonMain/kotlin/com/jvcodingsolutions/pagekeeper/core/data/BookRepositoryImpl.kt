@@ -115,15 +115,19 @@ class BookRepositoryImpl(
         val entities = localBookDataSource.getAll()
         val existing = entities.find { it.id == book.id } ?: return
 
+        val effectiveProgress = if (book.isFinished) 1f else book.readingPosition.progressFraction
+
         val updated = existing.copy(
             title = book.title,
             author = book.author,
             coverImagePath = book.coverImagePath,
             isFavorite = book.isFavorite,
             isFinished = book.isFinished,
+            lastOpenedAt = book.lastOpenedAt,
             readingItemIndex = book.readingPosition.firstVisibleItemIndex,
             readingScrollOffset = book.readingPosition.firstVisibleItemScrollOffset,
             readingSectionCount = book.readingPosition.loadedSectionCount,
+            readingProgress = effectiveProgress,
         )
         localBookDataSource.update(updated)
     }
@@ -149,5 +153,17 @@ class BookRepositoryImpl(
 
     override suspend fun getBookById(bookId: String): Book? {
         return localBookDataSource.getAll().find { it.id == bookId }?.toBook()
+    }
+
+    override suspend fun markBookOpened(bookId: String) {
+        val entity = localBookDataSource.getAll().find { it.id == bookId } ?: return
+        localBookDataSource.update(entity.copy(lastOpenedAt = currentTimeMillis()))
+    }
+
+    override suspend fun getResumeBook(): Book? {
+        return localBookDataSource.getAll()
+            .filter { it.lastOpenedAt != null && !it.isFinished }
+            .maxByOrNull { it.lastOpenedAt ?: 0L }
+            ?.toBook()
     }
 }

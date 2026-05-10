@@ -18,6 +18,8 @@ data class BookEntity(
     val readingItemIndex: Int = 0,
     val readingScrollOffset: Int = 0,
     val readingSectionCount: Int = 1,
+    val readingProgress: Float = 0f,
+    val lastOpenedAt: Long? = null,
 )
 
 fun BookEntity.toBook(): Book = Book(
@@ -28,10 +30,12 @@ fun BookEntity.toBook(): Book = Book(
     isFavorite = isFavorite,
     isFinished = isFinished,
     dateAdded = dateAdded,
+    lastOpenedAt = lastOpenedAt,
     readingPosition = ReadingPosition(
         firstVisibleItemIndex = readingItemIndex,
         firstVisibleItemScrollOffset = readingScrollOffset,
         loadedSectionCount = readingSectionCount,
+        progressFraction = readingProgress,
     ),
 )
 
@@ -48,4 +52,6 @@ fun Book.toEntity(fileHash: String, storedFileName: String): BookEntity = BookEn
     readingItemIndex = readingPosition.firstVisibleItemIndex,
     readingScrollOffset = readingPosition.firstVisibleItemScrollOffset,
     readingSectionCount = readingPosition.loadedSectionCount,
+    readingProgress = readingPosition.progressFraction,
+    lastOpenedAt = lastOpenedAt,
 )
