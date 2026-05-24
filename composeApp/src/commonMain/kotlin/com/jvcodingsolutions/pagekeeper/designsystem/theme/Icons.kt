@@ -2,8 +2,12 @@ package com.jvcodingsolutions.pagekeeper.designsystem.theme
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
+import coil3.Image
 import org.jetbrains.compose.resources.vectorResource
 import pagekeeper.composeapp.generated.resources.Res
+import pagekeeper.composeapp.generated.resources.bookmark
+import pagekeeper.composeapp.generated.resources.bookmark_add
+import pagekeeper.composeapp.generated.resources.bookmark_color
 import pagekeeper.composeapp.generated.resources.close_menu
 import pagekeeper.composeapp.generated.resources.continue_reading
 import pagekeeper.composeapp.generated.resources.font_size
@@ -97,4 +101,13 @@ object AppIcons {
 
     val TabletContinueReading: ImageVector
         @Composable get() = vectorResource(Res.drawable.continue_reading)
+
+    val BookmarkAdd: ImageVector
+        @Composable get() = vectorResource(Res.drawable.bookmark_add)
+
+    val Bookmark: ImageVector
+        @Composable get() = vectorResource(Res.drawable.bookmark)
+
+    val BookmarkFilled: ImageVector
+        @Composable get() = vectorResource(Res.drawable.bookmark_color)
 }
