@@ -55,6 +55,9 @@ kotlin {
             implementation(libs.kotlinx.serialization.core)
             implementation(libs.kotlinx.serialization.json)
 
+            // KotlinX DateTime
+            implementation(libs.kotlinx.datetime)
+
             // XML Parsing
             implementation(libs.xmlutil.core)
 

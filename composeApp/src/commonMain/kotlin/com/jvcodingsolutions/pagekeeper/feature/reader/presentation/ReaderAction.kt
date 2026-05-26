@@ -10,6 +10,8 @@ sealed interface ReaderAction {
     data object OnLoadMoreSections : ReaderAction
     data object OnDismissError : ReaderAction
     data object OnChaptersClick : ReaderAction
+    data object OnBookmarksClick : ReaderAction
+    data object OnDismissBookmarkIndicator : ReaderAction
     data class OnSaveReadingPosition(
         val firstVisibleItemIndex: Int,
         val firstVisibleItemScrollOffset: Int,

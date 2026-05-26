@@ -20,3 +20,9 @@ data class ReaderRoute(val bookId: String) : NavKey
 
 @Serializable
 data class ChaptersRoute(val bookId: String) : NavKey
+
+@Serializable
+data class BookmarksRoute(val bookId: String) : NavKey
+
+@Serializable
+data object GlobalBookmarksRoute : NavKey

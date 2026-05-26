@@ -41,7 +41,6 @@ import androidx.compose.material3.WideNavigationRailValue
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberWideNavigationRailState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -53,13 +52,17 @@ import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDe
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.jvcodingsolutions.pagekeeper.app.navigation.BookmarksRoute
 import com.jvcodingsolutions.pagekeeper.app.navigation.ChaptersRoute
 import com.jvcodingsolutions.pagekeeper.app.navigation.FavoritesRoute
 import com.jvcodingsolutions.pagekeeper.app.navigation.FinishedRoute
+import com.jvcodingsolutions.pagekeeper.app.navigation.GlobalBookmarksRoute
 import com.jvcodingsolutions.pagekeeper.app.navigation.LibraryRoute
 import com.jvcodingsolutions.pagekeeper.app.navigation.Navigator
 import com.jvcodingsolutions.pagekeeper.app.navigation.ReaderRoute
 import com.jvcodingsolutions.pagekeeper.app.navigation.SplashRoute
+import com.jvcodingsolutions.pagekeeper.feature.bookmarks.presentation.BookmarksScreenRoot
+import com.jvcodingsolutions.pagekeeper.feature.globalbookmarks.presentation.GlobalBookmarksScreenRoot
 import com.jvcodingsolutions.pagekeeper.feature.reader.chapters.ChaptersScreenRoot
 import com.jvcodingsolutions.pagekeeper.getPlatform
 import com.jvcodingsolutions.pagekeeper.designsystem.theme.AppIcons
@@ -173,6 +176,7 @@ fun NavigationRoot() {
                         bookId = route.bookId,
                         onBackClick = { navigator.goBack() },
                         onChaptersClick = { bookId -> navigator.goTo(ChaptersRoute(bookId)) },
+                        onBookmarksClick = { bookId -> navigator.goTo(BookmarksRoute(bookId)) },
                     )
                 }
 
@@ -181,6 +185,38 @@ fun NavigationRoot() {
                         bookId = route.bookId,
                         onBackClick = { navigator.goBack() },
                     )
+                }
+
+                entry<BookmarksRoute> { route ->
+                    BookmarksScreenRoot(
+                        bookId = route.bookId,
+                        onBackClick = { navigator.goBack() },
+                        onOpenReader = { bookId ->
+                            // If the previous entry is already the reader for this book,
+                            // pop back to it so the bookmark scroll lands there, otherwise
+                            // push a new reader entry on top.
+                            val prev = navigator.backStack.getOrNull(navigator.backStack.size - 2)
+                            if (prev is ReaderRoute && prev.bookId == bookId) {
+                                navigator.goBack()
+                            } else {
+                                navigator.goTo(ReaderRoute(bookId))
+                            }
+                        },
+                    )
+                }
+
+                entry<GlobalBookmarksRoute> {
+                    if (isExpandedScreen) {
+                        ExpandedGlobalBookmarksLayout(
+                            navigator = navigator,
+                            railState = railState,
+                            onImportBookClick = {
+                                libraryViewModel.onAction(LibraryAction.OnImportBookClick)
+                            },
+                        )
+                    } else {
+                        CompactGlobalBookmarksLayout(navigator = navigator)
+                    }
                 }
             },
         )
@@ -335,7 +371,8 @@ private fun PageKeeperDrawerContent(
             NavigationDrawerItem(
                 icon = {
                     Icon(
-                        imageVector = AppIcons.Library,
+                        imageVector = if (selectedRoute is LibraryRoute) AppIcons.MenuLibraryActive
+                            else AppIcons.MenuLibraryDeActive,
                         contentDescription = null,
                         modifier = Modifier.size(24.dp),
                         tint = IconColor,
@@ -358,7 +395,8 @@ private fun PageKeeperDrawerContent(
             NavigationDrawerItem(
                 icon = {
                     Icon(
-                        imageVector = AppIcons.Favorites,
+                        imageVector = if (selectedRoute is FavoritesRoute) AppIcons.MenuFavoritesActive
+                            else AppIcons.MenuFavoritesDeActive,
                         contentDescription = null,
                         modifier = Modifier.size(24.dp),
                         tint = IconColor,
@@ -381,7 +419,8 @@ private fun PageKeeperDrawerContent(
             NavigationDrawerItem(
                 icon = {
                     Icon(
-                        imageVector = AppIcons.Finished,
+                        imageVector = if (selectedRoute is FinishedRoute) AppIcons.MenuFinishedActive
+                            else AppIcons.MenuFinishedDeActive,
                         contentDescription = null,
                         modifier = Modifier.size(24.dp),
                         tint = IconColor,
@@ -392,6 +431,30 @@ private fun PageKeeperDrawerContent(
                 },
                 selected = selectedRoute is FinishedRoute,
                 onClick = { onNavigate(FinishedRoute) },
+                colors = NavigationDrawerItemDefaults.colors(
+                    selectedContainerColor = BgActive,
+                    unselectedContainerColor = Color.Transparent,
+                ),
+                modifier = Modifier
+                    .padding(start = 16.dp)
+                    .fillMaxWidth(0.55f),
+            )
+
+            NavigationDrawerItem(
+                icon = {
+                    Icon(
+                        imageVector = if (selectedRoute is BookmarksRoute) AppIcons.BookmarkFilled
+                            else AppIcons.Bookmark,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                        tint = IconColor,
+                    )
+                },
+                label = {
+                    Text("Bookmarks", style = MaterialTheme.typography.labelMedium, color = IconColor)
+                },
+                selected = selectedRoute is GlobalBookmarksRoute,
+                onClick = { onNavigate(GlobalBookmarksRoute) },
                 colors = NavigationDrawerItemDefaults.colors(
                     selectedContainerColor = BgActive,
                     unselectedContainerColor = Color.Transparent,
@@ -485,6 +548,20 @@ private fun PageKeeperNavigationRail(
             railExpanded = expanded,
             colors = itemColors,
         )
+        WideNavigationRailItem(
+            selected = selectedRoute is GlobalBookmarksRoute,
+            onClick = { onNavigate(GlobalBookmarksRoute) },
+            icon = {
+                Icon(
+                    imageVector = AppIcons.Bookmark,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                )
+            },
+            label = { Text("Bookmarks") },
+            railExpanded = expanded,
+            colors = itemColors,
+        )
     }
 }
 
@@ -568,6 +645,87 @@ private fun RailHeader(
 }
 
 
+
+// ── Global Bookmarks: Compact (phone) — drawer-based ──
+
+@Composable
+private fun CompactGlobalBookmarksLayout(
+    navigator: Navigator,
+) {
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            PageKeeperDrawerContent(
+                selectedRoute = GlobalBookmarksRoute,
+                onNavigate = { route ->
+                    scope.launch { drawerState.close() }
+                    if (route != GlobalBookmarksRoute) {
+                        navigator.replaceWith(route)
+                    }
+                },
+                onImportBookClick = {
+                    scope.launch { drawerState.close() }
+                    // No-op here — the Library/import button is most useful in the library
+                    // flow; the drawer still surfaces it so users can switch flows quickly.
+                    navigator.replaceWith(LibraryRoute)
+                },
+                onCloseDrawer = { scope.launch { drawerState.close() } },
+            )
+        },
+    ) {
+        GlobalBookmarksScreenRoot(
+            onMenuClick = { scope.launch { drawerState.open() } },
+            onOpenBookBookmarks = { bookId ->
+                navigator.goTo(BookmarksRoute(bookId))
+            },
+        )
+    }
+}
+
+// ── Global Bookmarks: Expanded (tablet) — rail-based ──
+
+@Composable
+private fun ExpandedGlobalBookmarksLayout(
+    navigator: Navigator,
+    railState: WideNavigationRailState,
+    onImportBookClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+    ) {
+        PageKeeperNavigationRail(
+            selectedRoute = GlobalBookmarksRoute,
+            onNavigate = { route ->
+                if (route != GlobalBookmarksRoute) {
+                    navigator.replaceWith(route)
+                }
+            },
+            onImportBookClick = onImportBookClick,
+            railState = railState,
+        )
+
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .padding(top = 52.dp, end = 16.dp, bottom = 16.dp)
+                .clip(RoundedCornerShape(24.dp))
+                .background(TabletBlockBg),
+        ) {
+            GlobalBookmarksScreenRoot(
+                onMenuClick = { },
+                onOpenBookBookmarks = { bookId ->
+                    navigator.goTo(BookmarksRoute(bookId))
+                },
+            )
+        }
+    }
+}
 
 @Preview(device = PIXEL_9_PRO, showSystemUi = true)
 @Composable

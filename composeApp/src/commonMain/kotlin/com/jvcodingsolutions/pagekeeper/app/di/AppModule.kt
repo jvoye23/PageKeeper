@@ -2,11 +2,16 @@ package com.jvcodingsolutions.pagekeeper.app.di
 
 import com.jvcodingsolutions.pagekeeper.app.MainViewModel
 import com.jvcodingsolutions.pagekeeper.core.data.BookRepositoryImpl
+import com.jvcodingsolutions.pagekeeper.core.data.BookmarkRepositoryImpl
 import com.jvcodingsolutions.pagekeeper.core.data.EpubBookParser
 import com.jvcodingsolutions.pagekeeper.core.data.Fb2BookParser
 import com.jvcodingsolutions.pagekeeper.core.data.LocalBookDataSource
+import com.jvcodingsolutions.pagekeeper.core.data.LocalBookmarkDataSource
 import com.jvcodingsolutions.pagekeeper.core.data.PdfBookParser
 import com.jvcodingsolutions.pagekeeper.core.domain.BookRepository
+import com.jvcodingsolutions.pagekeeper.core.domain.BookmarkRepository
+import com.jvcodingsolutions.pagekeeper.feature.bookmarks.presentation.BookmarksViewModel
+import com.jvcodingsolutions.pagekeeper.feature.globalbookmarks.presentation.GlobalBookmarksViewModel
 import com.jvcodingsolutions.pagekeeper.feature.library.presentation.LibraryViewModel
 import com.jvcodingsolutions.pagekeeper.feature.reader.chapters.ChaptersViewModel
 import com.jvcodingsolutions.pagekeeper.feature.reader.data.EpubContentParser
@@ -29,6 +34,8 @@ val dataModule = module {
     singleOf(::PdfBookParser)
     singleOf(::LocalBookDataSource)
     single<BookRepository> { BookRepositoryImpl(get(), get(), get(), get(), get()) }
+    singleOf(::LocalBookmarkDataSource)
+    single<BookmarkRepository> { BookmarkRepositoryImpl(get()) }
     singleOf(::Fb2ContentParser)
     singleOf(::EpubContentParser)
     singleOf(::ReaderSettingsStorage)
@@ -42,6 +49,8 @@ val appModule = module {
     }
     viewModelOf(::MainViewModel)
     viewModelOf(::LibraryViewModel)
+    viewModelOf(::GlobalBookmarksViewModel)
     viewModel { params -> ReaderViewModel(params.get(), get(), get(), get(), get(), get()) }
     viewModel { params -> ChaptersViewModel(params.get(), get(), get(), get(), get()) }
+    viewModel { params -> BookmarksViewModel(params.get(), get(), get()) }
 }

@@ -97,19 +97,25 @@ fun ReaderScreenRoot(
     bookId: String,
     onBackClick: () -> Unit,
     onChaptersClick: (String) -> Unit,
+    onBookmarksClick: (String) -> Unit,
     viewModel: ReaderViewModel = koinViewModel { parametersOf(bookId) },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackBarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val pendingScroll = remember { mutableStateOf<Int?>(null) }
+    val pendingBookmarkScroll = remember { mutableStateOf<Pair<Int, Int>?>(null) }
 
     ObserveAsEvents(viewModel.events) { event ->
         when (event) {
             is ReaderEvent.NavigateBack -> onBackClick()
             is ReaderEvent.NavigateToChapters -> onChaptersClick(event.bookId)
+            is ReaderEvent.NavigateToBookmarks -> onBookmarksClick(event.bookId)
             is ReaderEvent.ScrollToItem -> {
                 pendingScroll.value = event.itemIndex
+            }
+            is ReaderEvent.ScrollToBookmark -> {
+                pendingBookmarkScroll.value = event.itemIndex to event.scrollOffset
             }
             is ReaderEvent.ShowSnackbar -> {
                 val message = when (event.message) {
@@ -129,6 +135,8 @@ fun ReaderScreenRoot(
         snackBarHostState = snackBarHostState,
         pendingScrollItemIndex = pendingScroll.value,
         onPendingScrollConsumed = { pendingScroll.value = null },
+        pendingBookmarkScroll = pendingBookmarkScroll.value,
+        onPendingBookmarkScrollConsumed = { pendingBookmarkScroll.value = null },
     )
 }
 
@@ -140,6 +148,8 @@ fun ReaderScreen(
     snackBarHostState: SnackbarHostState = remember { SnackbarHostState() },
     pendingScrollItemIndex: Int? = null,
     onPendingScrollConsumed: () -> Unit = {},
+    pendingBookmarkScroll: Pair<Int, Int>? = null,
+    onPendingBookmarkScrollConsumed: () -> Unit = {},
 ) {
     val windowSizeClass = calculateWindowSizeClass()
     val isWideScreen = windowSizeClass.widthSizeClass >= WindowWidthSizeClass.Expanded
@@ -162,6 +172,29 @@ fun ReaderScreen(
         if (target != null && !state.isLoading && target < state.contentElements.size) {
             listState.scrollToItem(target)
             onPendingScrollConsumed()
+        }
+    }
+
+    // Programmatic scroll triggered by tapping a bookmark — anchor stays slightly
+    // below the top of the screen so the user can see the bookmarked fragment.
+    LaunchedEffect(pendingBookmarkScroll, state.contentElements.size) {
+        val target = pendingBookmarkScroll
+        if (target != null && !state.isLoading && target.first < state.contentElements.size) {
+            val anchorOffset = (target.second - 80).coerceAtLeast(0)
+            listState.scrollToItem(target.first, anchorOffset)
+            onPendingBookmarkScrollConsumed()
+        }
+    }
+
+    // Hide the bookmark indicator once the anchored item leaves the visible viewport.
+    LaunchedEffect(state.activeBookmarkAnchorItemIndex) {
+        val anchor = state.activeBookmarkAnchorItemIndex ?: return@LaunchedEffect
+        snapshotFlow {
+            val visible = listState.layoutInfo.visibleItemsInfo
+            if (visible.isEmpty()) false
+            else anchor in visible.first().index..visible.last().index
+        }.collect { stillVisible ->
+            if (!stillVisible) onAction(ReaderAction.OnDismissBookmarkIndicator)
         }
     }
 
@@ -249,12 +282,11 @@ fun ReaderScreen(
                                 ReaderBottomToolbar(
                                     progressFraction = state.progressFraction,
                                     isLandscapeLocked = state.isLandscapeLocked,
-                                    showOrientationControl = showOrientationControl,
                                     showChaptersButton = state.bookStructure != null,
                                     onChaptersClick = { onAction(ReaderAction.OnChaptersClick) },
+                                    onBookmarksClick = { onAction(ReaderAction.OnBookmarksClick) },
                                     onToggleOrientation = { onAction(ReaderAction.OnToggleOrientation) },
-                                    onFontSizeClick = { onAction(ReaderAction.OnFontSizeClick) },
-                                )
+                                ) { onAction(ReaderAction.OnFontSizeClick) }
                             }
                         }
                     } else {
@@ -316,6 +348,23 @@ fun ReaderScreen(
                 fontSize = sliderValue.toInt(),
                 sliderFraction = sliderFraction,
                 modifier = Modifier.align(Alignment.BottomCenter),
+            )
+        }
+
+        // Bookmark indicator — visible while the bookmarked fragment is on-screen
+        AnimatedVisibility(
+            visible = state.isBookmarkIndicatorVisible && !state.isLoading,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 16.dp, end = 16.dp),
+        ) {
+            Icon(
+                imageVector = AppIcons.BookmarkFilled,
+                contentDescription = "Bookmarked position",
+                tint = Primary,
+                modifier = Modifier.size(28.dp),
             )
         }
     }
@@ -561,9 +610,9 @@ private fun ImmersiveProgressBar(
 private fun ReaderBottomToolbar(
     progressFraction: Float,
     isLandscapeLocked: Boolean,
-    showOrientationControl: Boolean,
     showChaptersButton: Boolean,
     onChaptersClick: () -> Unit,
+    onBookmarksClick: () -> Unit,
     onToggleOrientation: () -> Unit,
     onFontSizeClick: () -> Unit,
 ) {
@@ -616,6 +665,25 @@ private fun ReaderBottomToolbar(
                     },
                 )
             }
+            NavigationBarItem(
+                selected = false,
+                onClick = { onBookmarksClick() },
+                icon = {
+                    Icon(
+                        imageVector = AppIcons.Bookmark,
+                        contentDescription = "Bookmarks",
+                        tint = IconsColor,
+                        modifier = Modifier.size(24.dp),
+                    )
+                },
+                label = {
+                    Text(
+                        text = "Bookmarks",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = IconsColor,
+                    )
+                },
+            )
             NavigationBarItem(
                 selected = false,
                 onClick = { onToggleOrientation() },
