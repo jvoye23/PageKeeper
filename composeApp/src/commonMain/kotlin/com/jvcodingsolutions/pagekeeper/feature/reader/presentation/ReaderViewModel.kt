@@ -11,10 +11,12 @@ import com.jvcodingsolutions.pagekeeper.feature.reader.data.EpubContentParser
 import com.jvcodingsolutions.pagekeeper.feature.reader.data.Fb2ContentParser
 import com.jvcodingsolutions.pagekeeper.feature.reader.data.PdfPageRenderer
 import com.jvcodingsolutions.pagekeeper.feature.reader.data.ReaderSettingsStorage
+import com.jvcodingsolutions.pagekeeper.feature.reader.domain.BookContentElement
 import com.jvcodingsolutions.pagekeeper.feature.reader.domain.BookStructure
 import com.jvcodingsolutions.pagekeeper.feature.reader.domain.ChapterNode
 import com.jvcodingsolutions.pagekeeper.feature.reader.domain.ReadingProgressCalculator
 import com.jvcodingsolutions.pagekeeper.feature.reader.domain.StructureSection
+import com.jvcodingsolutions.pagekeeper.feature.reader.domain.findChapterTitleAt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
@@ -62,12 +64,21 @@ class ReaderViewModel(
     init {
         loadBook()
         observeChapterJumps()
+        observeBookmarkJumps()
     }
 
     private fun observeChapterJumps() {
         viewModelScope.launch {
             readerSession.jumpRequests.collect { target ->
                 jumpToChapter(target.sectionIndex, target.anchorId)
+            }
+        }
+    }
+
+    private fun observeBookmarkJumps() {
+        viewModelScope.launch {
+            readerSession.bookmarkJumps.collect { target ->
+                jumpToBookmark(target)
             }
         }
     }
@@ -368,11 +379,111 @@ class ReaderViewModel(
                 }
             }
 
+            is ReaderAction.OnBookmarksClick -> {
+                viewModelScope.launch {
+                    persistReadingPosition()
+                    publishCurrentAnchor()
+                    _events.send(ReaderEvent.NavigateToBookmarks(bookId))
+                }
+            }
+
+            is ReaderAction.OnDismissBookmarkIndicator -> {
+                _state.update {
+                    it.copy(
+                        isBookmarkIndicatorVisible = false,
+                        activeBookmarkAnchorItemIndex = null,
+                    )
+                }
+            }
+
             is ReaderAction.OnSaveReadingPosition -> {
                 lastItemIndex = action.firstVisibleItemIndex
                 lastScrollOffset = action.firstVisibleItemScrollOffset
                 _state.update { it.copy(progressFraction = computeProgress(it, action.firstVisibleItemIndex)) }
+                publishCurrentAnchor()
             }
+        }
+    }
+
+    private fun publishCurrentAnchor() {
+        val current = _state.value
+        if (current.isLoading || current.isPdf) return
+        val itemIndex = lastItemIndex
+        val sectionIndex = sectionIndexForItem(itemIndex)
+        val chapterTitle = current.bookStructure?.findChapterTitleAt(sectionIndex).orEmpty()
+        val fragment = firstParagraphTextFrom(current.contentElements, itemIndex)
+        readerSession.updateCurrentAnchor(
+            CurrentReaderAnchor(
+                bookId = bookId,
+                firstVisibleItemIndex = itemIndex,
+                firstVisibleItemScrollOffset = lastScrollOffset,
+                loadedSectionCount = current.loadedSectionCount,
+                sectionIndex = sectionIndex,
+                chapterTitle = chapterTitle,
+                firstVisibleParagraphText = fragment,
+            )
+        )
+    }
+
+    private fun sectionIndexForItem(itemIndex: Int): Int {
+        if (chapterStartItemIndices.isEmpty()) return 0
+        // Find the largest start-index <= itemIndex.
+        var found = 0
+        chapterStartItemIndices.forEachIndexed { i, start ->
+            if (start <= itemIndex) found = i
+        }
+        return found
+    }
+
+    private fun firstParagraphTextFrom(
+        elements: List<BookContentElement>,
+        startIndex: Int,
+    ): String {
+        val from = startIndex.coerceIn(0, (elements.size - 1).coerceAtLeast(0))
+        for (i in from until elements.size) {
+            val el = elements[i]
+            if (el is BookContentElement.Paragraph) {
+                val text = el.text.text.trim()
+                if (text.isNotEmpty()) return text.take(160)
+            }
+        }
+        // Fallback: walk back to find any paragraph.
+        for (i in (from - 1) downTo 0) {
+            val el = elements[i]
+            if (el is BookContentElement.Paragraph) {
+                val text = el.text.text.trim()
+                if (text.isNotEmpty()) return text.take(160)
+            }
+        }
+        return ""
+    }
+
+    private fun jumpToBookmark(target: BookmarkJumpTarget) {
+        if (_state.value.isPdf) return
+        viewModelScope.launch {
+            // Make sure enough sections are loaded so the target item exists.
+            val sectionsNeeded = target.loadedSectionCount.coerceAtLeast(1)
+            while (_state.value.loadedSectionCount < sectionsNeeded) {
+                loadNextChapterBlocking()
+            }
+            val total = _state.value.contentElements.size
+            if (total == 0) return@launch
+            val itemIndex = target.firstVisibleItemIndex.coerceIn(0, total - 1)
+            lastItemIndex = itemIndex
+            lastScrollOffset = target.firstVisibleItemScrollOffset
+            _state.update {
+                it.copy(
+                    progressFraction = computeProgress(it, itemIndex),
+                    activeBookmarkAnchorItemIndex = itemIndex,
+                    isBookmarkIndicatorVisible = true,
+                )
+            }
+            _events.send(
+                ReaderEvent.ScrollToBookmark(
+                    itemIndex = itemIndex,
+                    scrollOffset = target.firstVisibleItemScrollOffset,
+                )
+            )
         }
     }
 

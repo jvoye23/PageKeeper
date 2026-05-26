@@ -27,6 +27,9 @@ data class ReaderState(
     val pdfPages: List<ImageBitmap> = emptyList(),
     val pdfPageCount: Int = 0,
     val loadedPdfPageCount: Int = 0,
+    // Bookmark indicator (visible only while the anchored item is on-screen)
+    val isBookmarkIndicatorVisible: Boolean = false,
+    val activeBookmarkAnchorItemIndex: Int? = null,
 ) {
     val hasMoreSections: Boolean
         get() = if (isPdf) loadedPdfPageCount < pdfPageCount

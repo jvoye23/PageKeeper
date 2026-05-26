@@ -15,6 +15,7 @@ junit = "4.13.2"
 koin = "4.2.0"
 kotlin = "2.3.20"
 kotlinxSerialization = "1.10.0"
+kotlinxDatetime = "0.6.1"
 material3 = "1.10.0-alpha05"
 cmpNavigation3 = "1.0.0-alpha06"
 windowSizeClass = "0.5.0"
@@ -54,6 +55,9 @@ jetbrains-lifecycle-viewmodel-navigation3 = { module = "org.jetbrains.androidx.l
 # KotlinX Serialization
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinxSerialization" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+
+# KotlinX DateTime
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 
 # XML Parsing
 xmlutil-core = { module = "io.github.pdvrieze.xmlutil:core", version.ref = "xmlutil" }

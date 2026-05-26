@@ -10,6 +10,8 @@ val TextSecondary = Color(0xFF706C61)
 val BgMain = Color(0xFFFDFCF8)
 val BgCard = Color(0xFFE4CDA8)
 val BgActive = Color(0xFFF1EBDF)
+val BgModalInput = Color(0xFFF6F6F6)
+val BgModalOutline = Color(0xFFEAEAEA)
 
 val BgBottomNav = Color(0xFFF4F1E6)
 
@@ -36,3 +38,10 @@ val LoaderSecondary = Color(0xFFE8E4D8)
 val TabletBlockBg = Color(0xFFF1EBDF)
 
 val IconsColor = Color(0xFF706C61)
+
+// Bookmark colors (used as fill for the colored bookmark indicator)
+val BookmarkBlue = Color(0xFF1A73E8)
+val BookmarkGreen = Color(0xFF1A8C3E)
+val BookmarkYellow = Color(0xFFB5A100)
+val BookmarkRed = Color(0xFFCB3A1E)
+val BookmarkPurple = Color(0xFFC81E91)

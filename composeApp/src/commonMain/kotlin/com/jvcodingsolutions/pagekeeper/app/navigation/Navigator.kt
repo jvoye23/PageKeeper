@@ -46,7 +46,10 @@ class Navigator(startDestination: Any) {
             is LibraryRoute -> "library"
             is FavoritesRoute -> "favorites"
             is FinishedRoute -> "finished"
+            is GlobalBookmarksRoute -> "global_bookmarks"
             is ReaderRoute -> "reader:${route.bookId}"
+            is ChaptersRoute -> "chapters:${route.bookId}"
+            is BookmarksRoute -> "bookmarks:${route.bookId}"
             else -> throw IllegalArgumentException("Unknown route: $route")
         }
 
@@ -55,7 +58,10 @@ class Navigator(startDestination: Any) {
             encoded == "library" -> LibraryRoute
             encoded == "favorites" -> FavoritesRoute
             encoded == "finished" -> FinishedRoute
+            encoded == "global_bookmarks" -> GlobalBookmarksRoute
             encoded.startsWith("reader:") -> ReaderRoute(encoded.removePrefix("reader:"))
+            encoded.startsWith("chapters:") -> ChaptersRoute(encoded.removePrefix("chapters:"))
+            encoded.startsWith("bookmarks:") -> BookmarksRoute(encoded.removePrefix("bookmarks:"))
             else -> throw IllegalArgumentException("Unknown encoded route: $encoded")
         }
     }
